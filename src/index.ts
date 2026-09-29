@@ -24,6 +24,7 @@ interface CliOptions {
   baseUrl?: string;
   help: boolean;
   version: boolean;
+  debug: boolean;
 }
 
 function parseArgs(args: string[]): CliOptions {
@@ -33,6 +34,7 @@ function parseArgs(args: string[]): CliOptions {
     csv: false,
     help: false,
     version: false,
+    debug: false,
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -77,6 +79,9 @@ function parseArgs(args: string[]): CliOptions {
         if (baseUrl) {
           options.baseUrl = baseUrl;
         }
+        break;
+      case '--debug':
+        options.debug = true;
         break;
     }
   }
@@ -133,6 +138,7 @@ Options:
   -p, --provider <name>   Filter by provider
       --json              Output as JSON
       --csv               Output as CSV
+      --debug             Show debug request/response
 
 Environment Variables:
   NINE_ROUTER_BASE_URL    9Router API base URL
@@ -215,7 +221,7 @@ async function main(): Promise<void> {
           return testModel(client, model.id, group.name, {
             timeoutMs: config.timeoutMs,
             maxRetries: config.maxRetries,
-          });
+          }, options.debug);
         }
       );
       results.push(...groupResults);

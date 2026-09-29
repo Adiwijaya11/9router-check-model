@@ -19,7 +19,8 @@ export async function testModel(
   client: RouterClient,
   modelId: string,
   provider: string,
-  config: TesterConfig
+  config: TesterConfig,
+  debug: boolean = false
 ): Promise<ModelCheckResult> {
   const startTime = Date.now();
 
@@ -32,7 +33,7 @@ export async function testModel(
         const timeoutId = setTimeout(() => controller.abort(), config.timeoutMs);
 
         try {
-          await client.testModel(modelId);
+          await client.testModel(modelId, debug);
         } finally {
           clearTimeout(timeoutId);
         }

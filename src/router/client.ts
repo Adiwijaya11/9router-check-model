@@ -40,7 +40,7 @@ export class RouterClient {
   /**
    * Send a chat completion request to test a model
    */
-  async testModel(modelId: string): Promise<ChatCompletionResponse> {
+  async testModel(modelId: string, debug: boolean = false): Promise<ChatCompletionResponse> {
     const url = `${this.config.baseUrl}/chat/completions`;
     
     const request: ChatCompletionRequest = {
@@ -48,12 +48,16 @@ export class RouterClient {
       messages: [
         {
           role: 'user',
-          content: 'Reply with: OK',
+          content: 'Hi',
         },
       ],
-      max_tokens: 10,
-      temperature: 0,
+      max_tokens: 1,
     };
+
+    if (debug) {
+      console.log(`\n[DEBUG] Request to ${url}`);
+      console.log(`[DEBUG] Body: ${JSON.stringify(request, null, 2)}`);
+    }
 
     const response = await fetch(url, {
       method: 'POST',
@@ -64,11 +68,25 @@ export class RouterClient {
       body: JSON.stringify(request),
     });
 
-    if (!response.ok) {
-      const errorBody = await response.json() as ApiError;
-      throw new Error(`Model test failed: ${response.status} - ${errorBody.error?.message || response.statusText}`);
+    if (debug) {
+      console.log(`[DEBUG] Response status: ${response.status} ${response.statusText}`);
     }
 
-    return response.json() as Promise<ChatCompletionResponse>;
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({})) as ApiError;
+      const errorMessage = errorBody.error?.message || response.statusText;
+      if (debug) {
+        console.log(`[DEBUG] Error body: ${JSON.stringify(errorBody, null, 2)}`);
+      }
+      throw new Error(`Model test failed: ${response.status} - ${errorMessage}`);
+    }
+
+    const data = await response.json() as ChatCompletionResponse;
+    
+    if (debug) {
+      console.log(`[DEBUG] Response: ${JSON.stringify(data, null, 2)}`);
+    }
+
+    return data;
   }
 }
