@@ -16,6 +16,9 @@ import { outputJson } from './output/json.js';
 import { outputCsv } from './output/csv.js';
 import { ModelCheckResult } from './types/index.js';
 
+const CURRENT_VERSION = '0.1.0';
+const NPM_PACKAGE_NAME = '9router-check';
+
 interface CliOptions {
   concurrency: number;
   json: boolean;
@@ -25,6 +28,7 @@ interface CliOptions {
   help: boolean;
   version: boolean;
   debug: boolean;
+  noUpdateCheck: boolean;
 }
 
 function parseArgs(args: string[]): CliOptions {
@@ -35,6 +39,7 @@ function parseArgs(args: string[]): CliOptions {
     help: false,
     version: false,
     debug: false,
+    noUpdateCheck: false,
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -82,6 +87,9 @@ function parseArgs(args: string[]): CliOptions {
         break;
       case '--debug':
         options.debug = true;
+        break;
+      case '--no-update-check':
+        options.noUpdateCheck = true;
         break;
     }
   }
@@ -139,6 +147,7 @@ Options:
       --json              Output as JSON
       --csv               Output as CSV
       --debug             Show debug request/response
+      --no-update-check   Skip update check
 
 Environment Variables:
   NINE_ROUTER_BASE_URL    9Router API base URL
@@ -154,7 +163,35 @@ Examples:
 }
 
 function showVersion(): void {
-  console.log('0.1.0');
+  console.log(CURRENT_VERSION);
+}
+
+/**
+ * Check if a newer version is available on npm
+ */
+async function checkForUpdate(): Promise<void> {
+  try {
+    const response = await fetch(`https://registry.npmjs.org/${NPM_PACKAGE_NAME}/latest`, {
+      signal: AbortSignal.timeout(3000),
+    });
+    
+    if (!response.ok) return;
+    
+    const data = await response.json() as { version: string };
+    
+    if (data.version !== CURRENT_VERSION) {
+      const YELLOW = '\x1b[33m';
+      const RESET = '\x1b[0m';
+      const BOLD = '\x1b[1m';
+      console.log(`\n${YELLOW}${BOLD}╔══════════════════════════════════════════════════════════╗${RESET}`);
+      console.log(`${YELLOW}${BOLD}║${RESET}  ${YELLOW}Update tersedia!${RESET}                                        ${YELLOW}${BOLD}║${RESET}`);
+      console.log(`${YELLOW}${BOLD}║${RESET}  Versi saat ini: ${CURRENT_VERSION}  →  Versi terbaru: ${data.version}      ${YELLOW}${BOLD}║${RESET}`);
+      console.log(`${YELLOW}${BOLD}║${RESET}  Jalankan: ${BOLD}npm install -g 9router-check${RESET} untuk update   ${YELLOW}${BOLD}║${RESET}`);
+      console.log(`${YELLOW}${BOLD}╚══════════════════════════════════════════════════════════╝${RESET}\n`);
+    }
+  } catch {
+    // Silently fail - don't block main functionality
+  }
 }
 
 async function main(): Promise<void> {
@@ -173,6 +210,11 @@ async function main(): Promise<void> {
 
   // Show welcome screen
   showWelcome();
+
+  // Check for updates (non-blocking)
+  if (!options.noUpdateCheck) {
+    await checkForUpdate();
+  }
 
   // Load configuration (will prompt for API key if not set)
   const config = await loadConfig(options.baseUrl);
