@@ -262,7 +262,7 @@ async function main(): Promise<void> {
       const wantsUpdate = await promptUpdate(latestVersion);
       if (wantsUpdate) {
         await runUpdate();
-        return; // Exit after update - user should re-run
+        // Continue to welcome after update instead of exiting
       }
     }
   }
