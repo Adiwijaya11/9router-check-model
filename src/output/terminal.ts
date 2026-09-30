@@ -109,17 +109,26 @@ export function displayTerminal(
 function displaySummary(results: ModelCheckResult[]): void {
   const summary = calculateSummary(results);
 
-  console.log('\n' + '─'.repeat(50));
-  console.log(`Total Model   : ${summary.total}`);
-  console.log(`Hidup         : ${summary.active}`);
-  console.log(`Mati          : ${summary.unavailable}`);
-  console.log(`Limit         : ${summary.rateLimited}`);
-  console.log(`Timeout       : ${summary.timeout}`);
-  console.log(`Auth Error    : ${summary.authError}`);
-  console.log(`Provider Error: ${summary.providerError}`);
-  console.log(`Invalid       : ${summary.invalidResponse}`);
-  console.log(`Unknown       : ${summary.unknownError}`);
-  console.log('─'.repeat(50));
+  const GREEN = '\x1b[32m';
+  const RED = '\x1b[31m';
+  const YELLOW = '\x1b[33m';
+  const MAGENTA = '\x1b[35m';
+  const BOLD = '\x1b[1m';
+  const RESET = '\x1b[0m';
+
+  console.log(`\n${BOLD}┌──────────────────────────────────────────────────────────┐${RESET}`);
+  console.log(`${BOLD}│${RESET}  ${BOLD}RINGKASAN${RESET}                                                ${BOLD}│${RESET}`);
+  console.log(`${BOLD}├──────────────────────────────────────────────────────────┤${RESET}`);
+  console.log(`${BOLD}│${RESET}  Total Model   : ${BOLD}${summary.total}${RESET}                                    ${BOLD}│${RESET}`);
+  console.log(`${BOLD}│${RESET}  ${GREEN}Hidup${RESET}         : ${GREEN}${summary.active}${RESET}                                    ${BOLD}│${RESET}`);
+  console.log(`${BOLD}│${RESET}  ${RED}Mati${RESET}          : ${RED}${summary.unavailable}${RESET}                                    ${BOLD}│${RESET}`);
+  console.log(`${BOLD}│${RESET}  ${YELLOW}Limit${RESET}         : ${YELLOW}${summary.rateLimited}${RESET}                                    ${BOLD}│${RESET}`);
+  console.log(`${BOLD}│${RESET}  ${YELLOW}Timeout${RESET}       : ${YELLOW}${summary.timeout}${RESET}                                    ${BOLD}│${RESET}`);
+  console.log(`${BOLD}│${RESET}  ${RED}Auth Error${RESET}    : ${RED}${summary.authError}${RESET}                                    ${BOLD}│${RESET}`);
+  console.log(`${BOLD}│${RESET}  ${RED}Provider Error${RESET} : ${RED}${summary.providerError}${RESET}                                    ${BOLD}│${RESET}`);
+  console.log(`${BOLD}│${RESET}  ${RED}Invalid${RESET}        : ${RED}${summary.invalidResponse}${RESET}                                    ${BOLD}│${RESET}`);
+  console.log(`${BOLD}│${RESET}  ${MAGENTA}Unknown${RESET}        : ${MAGENTA}${summary.unknownError}${RESET}                                    ${BOLD}│${RESET}`);
+  console.log(`${BOLD}└──────────────────────────────────────────────────────────┘${RESET}`);
 }
 
 /**
@@ -139,21 +148,26 @@ function displayRecommendations(activeModels: ModelCheckResult[]): void {
     byProvider.get(model.provider)!.push(model);
   }
 
-  console.log('\n' + '═'.repeat(50));
-  console.log('REKOMENDASI MODEL TERBAIK PER PROVIDER');
-  console.log('═'.repeat(50));
+  const CYAN = '\x1b[36m';
+  const GREEN = '\x1b[32m';
+  const BOLD = '\x1b[1m';
+  const RESET = '\x1b[0m';
+
+  console.log(`\n${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗${RESET}`);
+  console.log(`${BOLD}${CYAN}║${RESET}  ${BOLD}${CYAN}REKOMENDASI MODEL TERBAIK PER PROVIDER${RESET}                ${BOLD}${CYAN}║${RESET}`);
+  console.log(`${BOLD}${CYAN}╚══════════════════════════════════════════════════════════╝${RESET}`);
 
   for (const [provider, models] of byProvider) {
     // Sort by latency (fastest first)
     const sorted = [...models].sort((a, b) => a.latencyMs - b.latencyMs);
     const best = sorted[0];
 
-    console.log(`\n  Provider: ${provider}`);
-    console.log(`  Model: ${best.id}`);
-    console.log(`  Latency: ${formatLatency(best.latencyMs)}`);
+    console.log(`\n  ${BOLD}Provider:${RESET} ${CYAN}${provider}${RESET}`);
+    console.log(`  ${BOLD}Model:${RESET}    ${best.id}`);
+    console.log(`  ${BOLD}Latency:${RESET}  ${GREEN}${formatLatency(best.latencyMs)}${RESET}`);
   }
 
-  console.log('\n' + '═'.repeat(50));
+  console.log(`\n${BOLD}${CYAN}╚══════════════════════════════════════════════════════════╝${RESET}`);
 }
 
 /**
