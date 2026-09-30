@@ -259,11 +259,8 @@ async function main(): Promise<void> {
   if (!options.noUpdateCheck) {
     const latestVersion = await checkForUpdate();
     if (latestVersion) {
-      const wantsUpdate = await promptUpdate(latestVersion);
-      if (wantsUpdate) {
-        await runUpdate();
-        return; // Exit after update - user should re-run
-      }
+      await runUpdate();
+      return; // Exit after update - user should re-run
     }
   }
 
