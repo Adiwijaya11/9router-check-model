@@ -231,13 +231,13 @@ async function runUpdate(): Promise<void> {
   console.log(`\n${CYAN}${BOLD}Updating 9router-check...${RESET}\n`);
 
   try {
-    const { stdout, stderr } = await execAsync('npm install -g 9router-check');
+    const { stdout, stderr } = await execAsync('npm install -g 9router-check@latest');
     if (stdout) console.log(stdout);
     if (stderr) console.error(stderr);
     console.log(`\n${GREEN}${BOLD}Update berhasil! Silakan jalankan ulang 9router-check.${RESET}\n`);
   } catch (error) {
     console.error(`\n${RED}${BOLD}Update gagal.${RESET}`);
-    console.error(`  Jalankan manual: ${BOLD}npm install -g 9router-check${RESET}\n`);
+    console.error(`  Jalankan manual: ${BOLD}npm install -g 9router-check@latest${RESET}\n`);
   }
 }
 
