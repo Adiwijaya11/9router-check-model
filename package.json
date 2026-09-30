@@ -1,6 +1,6 @@
 {
   "name": "9router-check",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Unofficial CLI tool for checking 9Router model availability",
   "license": "ISC",
   "author": "",
@@ -13,7 +13,8 @@
     "dev": "ts-node src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "test": "tsc && node --test dist/**/*.test.js"
+    "test": "tsc && node --test dist/**/*.test.js",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "9router",

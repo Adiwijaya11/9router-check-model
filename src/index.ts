@@ -6,6 +6,7 @@
  * Unofficial CLI tool for checking 9Router model availability.
  */
 
+import * as readline from 'node:readline';
 import { loadConfig, validateConfig } from './config/config.js';
 import { RouterClient } from './router/client.js';
 import { groupByProvider } from './router/models.js';
@@ -169,28 +170,74 @@ function showVersion(): void {
 /**
  * Check if a newer version is available on npm
  */
-async function checkForUpdate(): Promise<void> {
+async function checkForUpdate(): Promise<string | null> {
   try {
     const response = await fetch(`https://registry.npmjs.org/${NPM_PACKAGE_NAME}/latest`, {
       signal: AbortSignal.timeout(3000),
     });
     
-    if (!response.ok) return;
+    if (!response.ok) return null;
     
     const data = await response.json() as { version: string };
     
     if (data.version !== CURRENT_VERSION) {
-      const YELLOW = '\x1b[33m';
-      const RESET = '\x1b[0m';
-      const BOLD = '\x1b[1m';
-      console.log(`\n${YELLOW}${BOLD}╔══════════════════════════════════════════════════════════╗${RESET}`);
-      console.log(`${YELLOW}${BOLD}║${RESET}  ${YELLOW}Update tersedia!${RESET}                                        ${YELLOW}${BOLD}║${RESET}`);
-      console.log(`${YELLOW}${BOLD}║${RESET}  Versi saat ini: ${CURRENT_VERSION}  →  Versi terbaru: ${data.version}      ${YELLOW}${BOLD}║${RESET}`);
-      console.log(`${YELLOW}${BOLD}║${RESET}  Jalankan: ${BOLD}npm install -g 9router-check${RESET} untuk update   ${YELLOW}${BOLD}║${RESET}`);
-      console.log(`${YELLOW}${BOLD}╚══════════════════════════════════════════════════════════╝${RESET}\n`);
+      return data.version;
     }
   } catch {
     // Silently fail - don't block main functionality
+  }
+  return null;
+}
+
+/**
+ * Prompt user for update
+ */
+async function promptUpdate(latestVersion: string): Promise<boolean> {
+  const YELLOW = '\x1b[33m';
+  const RESET = '\x1b[0m';
+  const BOLD = '\x1b[1m';
+  const CYAN = '\x1b[36m';
+  
+  console.log(`\n${YELLOW}${BOLD}╔══════════════════════════════════════════════════════════╗${RESET}`);
+  console.log(`${YELLOW}${BOLD}║${RESET}  ${YELLOW}Update tersedia!${RESET}                                        ${YELLOW}${BOLD}║${RESET}`);
+  console.log(`${YELLOW}${BOLD}║${RESET}  Versi saat ini: ${CURRENT_VERSION}  →  Versi terbaru: ${latestVersion}      ${YELLOW}${BOLD}║${RESET}`);
+  console.log(`${YELLOW}${BOLD}╚══════════════════════════════════════════════════════════╝${RESET}`);
+  
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  const answer = await new Promise<string>((resolve) => {
+    rl.question(`\n${CYAN}${BOLD}Update sekarang? (y/n): ${RESET}`, (ans: string) => {
+      rl.close();
+      resolve(ans.trim().toLowerCase());
+    });
+  });
+  
+  return answer === 'y' || answer === 'yes';
+}
+
+/**
+ * Run update command
+ */
+async function runUpdate(): Promise<void> {
+  const { exec } = await import('node:child_process');
+  const { promisify } = await import('node:util');
+  const execAsync = promisify(exec);
+
+  const CYAN = '\x1b[36m';
+  const GREEN = '\x1b[32m';
+  const RED = '\x1b[31m';
+  const BOLD = '\x1b[1m';
+  const RESET = '\x1b[0m';
+
+  console.log(`\n${CYAN}${BOLD}Updating 9router-check...${RESET}\n`);
+
+  try {
+    const { stdout, stderr } = await execAsync('npm install -g 9router-check');
+    if (stdout) console.log(stdout);
+    if (stderr) console.error(stderr);
+    console.log(`\n${GREEN}${BOLD}Update berhasil! Silakan jalankan ulang 9router-check.${RESET}\n`);
+  } catch (error) {
+    console.error(`\n${RED}${BOLD}Update gagal.${RESET}`);
+    console.error(`  Jalankan manual: ${BOLD}npm install -g 9router-check${RESET}\n`);
   }
 }
 
@@ -208,13 +255,20 @@ async function main(): Promise<void> {
     return;
   }
 
+  // Check for updates BEFORE welcome
+  if (!options.noUpdateCheck) {
+    const latestVersion = await checkForUpdate();
+    if (latestVersion) {
+      const wantsUpdate = await promptUpdate(latestVersion);
+      if (wantsUpdate) {
+        await runUpdate();
+        return; // Exit after update - user should re-run
+      }
+    }
+  }
+
   // Show welcome screen
   showWelcome();
-
-  // Check for updates (non-blocking)
-  if (!options.noUpdateCheck) {
-    await checkForUpdate();
-  }
 
   // Load configuration (will prompt for API key if not set)
   const config = await loadConfig(options.baseUrl);
