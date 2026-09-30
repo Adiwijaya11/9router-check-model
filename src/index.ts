@@ -17,7 +17,7 @@ import { outputJson } from './output/json.js';
 import { outputCsv } from './output/csv.js';
 import { ModelCheckResult } from './types/index.js';
 
-const CURRENT_VERSION = '0.1.8';
+const CURRENT_VERSION = '0.1.9';
 const NPM_PACKAGE_NAME = '9router-check';
 
 interface CliOptions {
