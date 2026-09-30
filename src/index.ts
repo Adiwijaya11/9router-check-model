@@ -110,7 +110,7 @@ function showWelcome(): void {
 
   console.log(`
 ${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗${RESET}
-${BOLD}${CYAN}║${RESET}      ${BOLD}9Router Model Checker${RESET} ${DIM}v0.1.0${RESET}                    ${BOLD}${CYAN}║${RESET}
+${BOLD}${CYAN}║${RESET}      ${BOLD}9Router Model Checker${RESET} ${DIM}v${CURRENT_VERSION}${RESET}                    ${BOLD}${CYAN}║${RESET}
 ${BOLD}${CYAN}╚══════════════════════════════════════════════════════════╝${RESET}
 
 ${DIM}Unofficial CLI tool for checking 9Router model availability.${RESET}
