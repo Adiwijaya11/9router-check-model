@@ -132,42 +132,64 @@ function displaySummary(results: ModelCheckResult[]): void {
 }
 
 /**
- * Display recommendations (1 best model per provider)
+ * Display recommendations grouped by Provider → AI Brand → Models
  */
 function displayRecommendations(activeModels: ModelCheckResult[]): void {
   if (activeModels.length === 0) {
     return;
   }
 
-  // Group by provider
-  const byProvider = new Map<string, ModelCheckResult[]>();
+  // Group by provider → AI brand → models
+  const byProvider = new Map<string, Map<string, ModelCheckResult[]>>();
+  
   for (const model of activeModels) {
+    // Extract AI brand from model ID (e.g., "gcli/grok-4.7" → "grok")
+    const parts = model.id.split('/');
+    const aiBrand = parts.length > 1 ? parts[1].split('-')[0] : parts[0];
+    
     if (!byProvider.has(model.provider)) {
-      byProvider.set(model.provider, []);
+      byProvider.set(model.provider, new Map());
     }
-    byProvider.get(model.provider)!.push(model);
+    const providerMap = byProvider.get(model.provider)!;
+    
+    if (!providerMap.has(aiBrand)) {
+      providerMap.set(aiBrand, []);
+    }
+    providerMap.get(aiBrand)!.push(model);
   }
 
   const CYAN = '\x1b[36m';
   const GREEN = '\x1b[32m';
+  const YELLOW = '\x1b[33m';
   const BOLD = '\x1b[1m';
   const RESET = '\x1b[0m';
 
   console.log(`\n${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗${RESET}`);
-  console.log(`${BOLD}${CYAN}║${RESET}  ${BOLD}${CYAN}REKOMENDASI MODEL TERBAIK PER PROVIDER${RESET}                ${BOLD}${CYAN}║${RESET}`);
+  console.log(`${BOLD}${CYAN}║${RESET}  ${BOLD}${CYAN}REKOMENDASI MODEL AKTIF PER PROVIDER${RESET}                   ${BOLD}${CYAN}║${RESET}`);
   console.log(`${BOLD}${CYAN}╚══════════════════════════════════════════════════════════╝${RESET}`);
 
-  for (const [provider, models] of byProvider) {
-    // Sort by latency (fastest first)
-    const sorted = [...models].sort((a, b) => a.latencyMs - b.latencyMs);
-    const best = sorted[0];
-
-    // Extract AI name from model ID (e.g., "gcli/grok-4.7" → "grok-4.7")
-    const aiName = best.id.includes('/') ? best.id.split('/').slice(1).join('/') : best.id;
-
-    console.log(`\n  ${BOLD}Provider:${RESET} ${CYAN}${provider}${RESET}`);
-    console.log(`  ${BOLD}AI:${RESET}       ${GREEN}${aiName}${RESET}`);
-    console.log(`  ${BOLD}Latency:${RESET}  ${GREEN}${formatLatency(best.latencyMs)}${RESET}`);
+  for (const [provider, aiMap] of byProvider) {
+    console.log(`\n${BOLD}${CYAN}┌─ Provider: ${provider}${RESET}`);
+    
+    for (const [aiBrand, models] of aiMap) {
+      // Sort by latency (fastest first)
+      const sorted = [...models].sort((a, b) => a.latencyMs - b.latencyMs);
+      const best = sorted[0];
+      
+      console.log(`${BOLD}${CYAN}│${RESET}  ${BOLD}${YELLOW}AI: ${aiBrand}${RESET}`);
+      console.log(`${BOLD}${CYAN}│${RESET}  ${BOLD}Model:${RESET}  ${best.id}`);
+      console.log(`${BOLD}${CYAN}│${RESET}  ${BOLD}Latency:${RESET} ${GREEN}${formatLatency(best.latencyMs)}${RESET}`);
+      
+      // Show other models under same AI brand
+      if (sorted.length > 1) {
+        console.log(`${BOLD}${CYAN}│${RESET}  ${BOLD}Model lain:${RESET}`);
+        for (let i = 1; i < sorted.length; i++) {
+          console.log(`${BOLD}${CYAN}│${RESET}    • ${sorted[i].id} (${formatLatency(sorted[i].latencyMs)})`);
+        }
+      }
+    }
+    
+    console.log(`${BOLD}${CYAN}└──────────────────────────────────────────────────────────${RESET}`);
   }
 
   console.log(`\n${BOLD}${CYAN}╚══════════════════════════════════════════════════════════╝${RESET}`);
