@@ -162,8 +162,11 @@ function displayRecommendations(activeModels: ModelCheckResult[]): void {
     const sorted = [...models].sort((a, b) => a.latencyMs - b.latencyMs);
     const best = sorted[0];
 
+    // Extract AI name from model ID (e.g., "gcli/grok-4.7" → "grok-4.7")
+    const aiName = best.id.includes('/') ? best.id.split('/').slice(1).join('/') : best.id;
+
     console.log(`\n  ${BOLD}Provider:${RESET} ${CYAN}${provider}${RESET}`);
-    console.log(`  ${BOLD}Model:${RESET}    ${best.id}`);
+    console.log(`  ${BOLD}AI:${RESET}       ${GREEN}${aiName}${RESET}`);
     console.log(`  ${BOLD}Latency:${RESET}  ${GREEN}${formatLatency(best.latencyMs)}${RESET}`);
   }
 
